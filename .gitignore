@@ -1,5 +1,7 @@
-vktoken
+token
 .idea/
 target/
 *.iml
-
+hibernate.cfg.xml
+dbAuthInfo
+*.log
