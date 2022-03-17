@@ -2,6 +2,7 @@ package org.nwolfhub;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.nwolfhub.database.ManualDatabase;
 import org.nwolfhub.vk.VkGroup;
 import org.nwolfhub.vk.longpoll.LongPoll;
 import org.nwolfhub.vk.longpoll.NewMessageUpdate;
@@ -51,9 +52,8 @@ public abstract class UpdateListener {
                         e.printStackTrace();
                     }
                 }
-
             } catch (IOException e) {
-                System.out.println("Exception while receivin");
+                System.out.println("Exception while receiving updates");
                 e.printStackTrace();
             }
         }

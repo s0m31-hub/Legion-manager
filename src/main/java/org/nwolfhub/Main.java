@@ -1,10 +1,13 @@
 package org.nwolfhub;
 
+import org.apache.logging.log4j.LogManager;
+import org.nwolfhub.database.ManualDatabase;
 import org.nwolfhub.vk.VkGroup;
 
 import java.io.*;
 import java.sql.SQLException;
 import java.util.Random;
+import java.util.logging.Level;
 
 public class Main {
 
@@ -50,6 +53,11 @@ public class Main {
             File errFile = new File("logs/errlog" + new Random().nextInt() + ".log");
             errFile.createNewFile();
             System.out.println("Error log file: " + errFile.getAbsolutePath() + ". Redirecting error stream");
+            File msgFile = new File("logs/msglog" + new Random().nextInt() + ".log");
+            msgFile.createNewFile();
+            System.out.println("message log file: " + errFile.getAbsolutePath() + ". Redirecting log stream");
+            ChatKeeper.initialize(vk);
+            System.setOut(new PrintStream(msgFile));
             System.setErr(new PrintStream(errFile));
             UpdateHandler.initialize(vk, db);
             UpdateListener.initialize(vk, db);
