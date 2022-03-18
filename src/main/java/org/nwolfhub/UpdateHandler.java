@@ -39,7 +39,11 @@ public abstract class UpdateHandler {
         String command = text.toLowerCase(Locale.ROOT);
         if(command.equals("ping")) {
             vk.makeRequest(new MessagesSend(peer_id, "pong"));
-        } else if(command.equals("!regme")) {
+        }
+        if (command.equals("!info")) {
+            vk.makeRequest(new MessagesSend(peer_id, "peer: " + peer_id + "\nfrom: " + from_id));
+        }
+        else if(command.equals("!regme")) {
             vk.makeRequest(new MessagesSend(peer_id, "Попытка регистрации через hibernate..."));
             if(dao.get(User.class, from_id)==null) {
                 try {

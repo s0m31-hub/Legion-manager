@@ -1,33 +1,59 @@
 package org.nwolfhub;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import org.nwolfhub.database.GroupDao;
 import org.nwolfhub.database.model.Chat;
+import org.nwolfhub.database.model.User;
 import org.nwolfhub.vk.VkGroup;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.util.ArrayList;
+import org.nwolfhub.vk.requests.GetConversationsById;
+import org.nwolfhub.vk.requests.MessagesSend;
+import org.nwolfhub.vk.requests.RemoveChatUser;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public abstract class ChatKeeper {
     private static GroupDao dao;
     private static VkGroup vk;
     public static List<Chat> chats;
 
-    public static void initialize(VkGroup vk) {
+    public static void initialize(VkGroup vk) throws IOException {
         dao = new GroupDao();
         ChatKeeper.vk = vk;
         chats = dao.getAll("Chat");
         System.out.println("Imported chats. Total amount: " + chats.size());
         for(Chat chat:chats) {
-            String currentMembers = chat.getMembers();
-            String gotMembersBody = vk.makeRequest(new GetChat(chat.id)); //remove this line
-            JsonArray gotMembers = JsonParser.parseString(gotMembersBody).getAsJsonObject().get("response").getAsJsonObject().get("users").getAsJsonArray();
-            List<String> members = IntStream.range(0, gotMembers.length())
+            String gotMembersBody = vk.makeRequest(new GetConversationsById(chat.id));
+            JsonArray gotMembers = JsonParser.parseString(gotMembersBody).getAsJsonObject().get("response").getAsJsonObject().get("items").getAsJsonArray().get(0).getAsJsonObject().get("chat_settings").getAsJsonObject().get("active_ids").getAsJsonArray();
+            List<String> members = IntStream.range(0, gotMembers.size())
             .mapToObj(gotMembers::get)
-            .map(JsonObject::string)
+            .map(JsonElement::getAsString)
             .collect(Collectors.toList());
             String reportedMembers = String.join(", ", members);
+            System.out.println(reportedMembers);
+            vk.makeRequest(new MessagesSend(chat.getId(), "(ТЕСТОВОЕ СООБЩЕНИЕ) Список участников: " + reportedMembers + "\nПоиск забаненых"));
+            StringBuilder banres = new StringBuilder();
+            for(String strId:reportedMembers.split(", ")) {
+                Integer id = Integer.valueOf(strId);
+                User u;
+                if((u = (User) dao.get(User.class, id))!=null) {
+                    if(u.isBanned()) {
+                        vk.makeRequest(new RemoveChatUser(chat.getId(), u.getId()));
+                        banres.append("\nЗабанен: ").append(u.getId());
+                    } else {
+                        banres.append("\nЧист: ").append(u.getId());
+                    }
+                }
+                else {
+                    banres.append("\nНе найден в базе: ").append(id);
+                }
+            }
+            vk.makeRequest(new MessagesSend(chat.getId(), "Результат проверок:" + banres));
         }
     }
 
