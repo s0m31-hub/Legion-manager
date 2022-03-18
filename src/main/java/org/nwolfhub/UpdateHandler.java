@@ -37,93 +37,42 @@ public abstract class UpdateHandler {
         String text = update.message.text;
         String payload = update.message.payload;
         String command = text.toLowerCase(Locale.ROOT);
+        if(command.equals("!команды") || command.equals("!помощь")) {
+            User u;
+            if ((u = (User) dao.get(User.class, from_id)) == null) {
+                vk.makeRequest(new MessagesSend(peer_id, "Команды бота:\n!regme - зарегаться в боте"));
+            } else if(u.getRank()>=3 && u.getRank()<5) {
+                vk.makeRequest(new MessagesSend(peer_id, "Команды бота:\n!я - информация о себе\n!чек - информация о другом пользователе\n!форсрег - зарегестрировать пользователя"));
+            } else if(u.getRank()>=5){
+                vk.makeRequest(new MessagesSend(peer_id, "Команды бота:\n!я - информация о себе\n!чек - информация о другом пользователе\n!форсрег - зарегестрировать пользователя\n!форсрег беседа - зарегестрировать всех пользователей в беседе"));
+            } else {
+                vk.makeRequest(new MessagesSend(peer_id, "Команды бота:\n!я - информация о себе"));
+            }
+        }
         if(command.equals("ping")) {
             vk.makeRequest(new MessagesSend(peer_id, "pong"));
         }
         if (command.equals("!info")) {
             vk.makeRequest(new MessagesSend(peer_id, "peer: " + peer_id + "\nfrom: " + from_id));
         }
-        else if(command.equals("!regme")) {
-            vk.makeRequest(new MessagesSend(peer_id, "Попытка регистрации через hibernate..."));
-            if(dao.get(User.class, from_id)==null) {
-                try {
-                    JsonObject request = JsonParser.parseString(vk.makeRequest(new UsersGet(from_id))).getAsJsonObject().get("response").getAsJsonArray().get(0).getAsJsonObject();
-                    String name = request.get("first_name").getAsString() + " " + request.get("last_name").getAsString();
-                    dao.save(new User().setId(from_id).setBanned(false).setLink("https://vk.com/id" + from_id).setName(name).setRank(0));
-                    vk.makeRequest(new MessagesSend(peer_id, "Успешно. Проверьте базу данных!"));
-                } catch (Exception e) {
-                    vk.makeRequest(new MessagesSend(peer_id, "Произошла ошибка, логи в файле"));
-                    e.printStackTrace();
-                }
-            } else {
-                vk.makeRequest(new MessagesSend(peer_id, "Уже зарегестрирован"));
-            }
-        }
-        if(command.equals("!я") || command.equals("!me")) {
-            try {
-                User u;
-                if((u = (User) dao.get(User.class, from_id))!=null) {
-                    vk.makeRequest(new MessagesSend(peer_id, "Инфо о пользователе " + u.getName() + "\nId: " + u.getId() + "\nСсылка: " + u.getLink() + "\nРанг администратора: " + u.getRank()));
-                } else {
-                    vk.makeRequest(new MessagesSend(peer_id, "Не зарегестрирован в системе. Обычно это означает, что регистрации работают в пассивном режиме. Короче: !regme в чат"));
-                }
-            } catch (Exception e) {
-                vk.makeRequest(new MessagesSend(peer_id, "Произошла ошибка во время транзакции! (" + e + ")"));
-                e.printStackTrace();
-            }
+        else if(command.equals("!regme") || command.equals("!я") || command.equals("!me") || command.contains("!чек") || command.contains("!форсрег")) {
+            UsersManager.handleUpdate(update);
         }
         if(command.equals("!regchat")) {
             User u;
             if((u = (User) dao.get(User.class, from_id))!=null) {
                 if (!peer_id.equals(from_id)) {
-                    if (u.getRank() < 3) {
-                        vk.makeRequest(new MessagesSend(peer_id, "Слишком маленький ранг в системе!\nТребуется: 3\nТекущий: " + u.getRank()));
+                    if (u.getRank() < 5) {
+                        vk.makeRequest(new MessagesSend(peer_id, "Слишком маленький ранг в системе!\nТребуется: 5\nТекущий: " + u.getRank()));
                     } else {
                         Chat cChat;
                         if ((cChat = (Chat) dao.get(Chat.class, peer_id))==null) {
                             cChat = new Chat(); cChat.setId(peer_id);
-                            
                         }
                     }
                 }
             } else {
                 vk.makeRequest(new MessagesSend(peer_id, "Не зарегестрирован в системе. Обычно это означает, что регистрации работают в пассивном режиме. Короче: !regme в чат"));
-            }
-        }
-        else if (command.contains("!чек")) {
-            try {
-                String[] holder = command.split(" ");
-                if (holder.length == 2) {
-                    User u;
-                    if ((u = (User) dao.get(User.class, from_id)) != null) {
-                        if (u.getRank() < 3) {
-                            vk.makeRequest(new MessagesSend(peer_id, "Слишком маленький ранг в системе!\nТребуется: 3\nТекущий: " + u.getRank()));
-                        } else {
-                            String id = holder[1].replace("[id", "").split("\\|")[0];
-                            System.out.println("Получаем инфо о пользователе " + id);
-                            Response r = vk.client.newCall(new Request.Builder().url("https://vk.com/foaf.php?id=" + id).build()).execute();
-                            String body = r.body().string();
-                            r.close();
-                            String regdate = body.split("<ya:created dc:date=\"")[1].split("T")[0];
-                            String usergetRes = vk.makeRequest(new UsersGet(Integer.valueOf(id), "nom"));
-                            JsonObject userget = JsonParser.parseString(usergetRes).getAsJsonObject().get("response").getAsJsonArray().get(0).getAsJsonObject();
-                            String username = userget.get("first_name").getAsString() + " " + userget.get("last_name").getAsString();
-                            User requested;
-                            boolean registered = false;
-                            String extra = "";
-                            if ((requested = (User) dao.get(User.class, Integer.valueOf(id))) != null) {
-                                registered = true;
-                                extra = "\nИнформация из базы:\nИмя и фамилия на момент регистрации: " + requested.getName() + "\nРанг в системе: " + requested.getRank() + "\nЗабанен: " + requested.isBanned();
-                            }
-                            vk.makeRequest(new MessagesSend(peer_id, "Запрос выполнен. Информация о пользователе " + username + ":\nДата регистрации: " + regdate + (extra.equals("") ? "\nНе состоит в базе легиона" : extra)));
-                        }
-                    } else {
-                        vk.makeRequest(new MessagesSend(peer_id, "Не зарегестрирован в системе. Обычно это означает, что регистрации работают в пассивном режиме. Короче: !regme в чат"));
-                    }
-                }
-            } catch (Exception e) {
-                vk.makeRequest(new MessagesSend(peer_id, e.toString()));
-                e.printStackTrace();
             }
         }
     }

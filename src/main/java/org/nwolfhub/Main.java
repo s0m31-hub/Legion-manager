@@ -55,11 +55,12 @@ public class Main {
             System.out.println("Error log file: " + errFile.getAbsolutePath() + ". Redirecting error stream");
             File msgFile = new File("logs/msglog" + new Random().nextInt() + ".log");
             msgFile.createNewFile();
-            System.out.println("message log file: " + errFile.getAbsolutePath() + ". Redirecting log stream");
+            System.out.println("message log file: " + msgFile.getAbsolutePath() + ". Redirecting log stream");
             ChatKeeper.initialize(vk);
             System.setOut(new PrintStream(msgFile));
             System.setErr(new PrintStream(errFile));
             UpdateHandler.initialize(vk, db);
+            UsersManager.initialize(vk);
             UpdateListener.initialize(vk, db);
         } catch (SQLException e) {
             System.out.println("Failed to connect to database!");

@@ -27,23 +27,25 @@ public abstract class ChatKeeper {
         ChatKeeper.vk = vk;
         chats = dao.getAll("Chat");
         System.out.println("Imported chats. Total amount: " + chats.size());
+    }
+
+    private static void recalculateChats() throws IOException {
         for(Chat chat:chats) {
             String gotMembersBody = vk.makeRequest(new GetConversationsById(chat.id));
             JsonArray gotMembers = JsonParser.parseString(gotMembersBody).getAsJsonObject().get("response").getAsJsonObject().get("items").getAsJsonArray().get(0).getAsJsonObject().get("chat_settings").getAsJsonObject().get("active_ids").getAsJsonArray();
             List<String> members = IntStream.range(0, gotMembers.size())
-            .mapToObj(gotMembers::get)
-            .map(JsonElement::getAsString)
-            .collect(Collectors.toList());
+                    .mapToObj(gotMembers::get)
+                    .map(JsonElement::getAsString)
+                    .collect(Collectors.toList());
             String reportedMembers = String.join(", ", members);
             System.out.println(reportedMembers);
-            vk.makeRequest(new MessagesSend(chat.getId(), "(ТЕСТОВОЕ СООБЩЕНИЕ) Список участников: " + reportedMembers + "\nПоиск забаненых"));
             StringBuilder banres = new StringBuilder();
             for(String strId:reportedMembers.split(", ")) {
                 Integer id = Integer.valueOf(strId);
                 User u;
                 if((u = (User) dao.get(User.class, id))!=null) {
                     if(u.isBanned()) {
-                        vk.makeRequest(new RemoveChatUser(chat.getId(), u.getId()));
+                        System.out.println(vk.makeRequest(new RemoveChatUser(chat.getId() - 2000000000, u.getId())));
                         banres.append("\nЗабанен: ").append(u.getId());
                     } else {
                         banres.append("\nЧист: ").append(u.getId());
@@ -55,10 +57,6 @@ public abstract class ChatKeeper {
             }
             vk.makeRequest(new MessagesSend(chat.getId(), "Результат проверок:" + banres));
         }
-    }
-
-    private static void recalculateChats() {
-
     }
 
     private static void ban() {
