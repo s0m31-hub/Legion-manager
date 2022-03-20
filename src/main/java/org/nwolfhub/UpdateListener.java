@@ -43,7 +43,8 @@ public abstract class UpdateListener {
     private static void listen() {
         while (true) {
             try {
-                List<NewMessageUpdate> updates = convert(LongPoll.convertUpdateByType(lp.getUpdates(), Update.Type.message_new));
+                List<Update> all = lp.getUpdates();
+                List<NewMessageUpdate> updates = convert(LongPoll.convertUpdateByType(all, Update.Type.message_new));
                 for (NewMessageUpdate update:updates) {
                     try {
                         System.out.println("Новое сообщение: " + "Отправитель: " + update.message.peer_id + ", текст: " + update.message.text + ", полезная нагрузка: " + update.message.payload + ", дата: " + update.message.date);

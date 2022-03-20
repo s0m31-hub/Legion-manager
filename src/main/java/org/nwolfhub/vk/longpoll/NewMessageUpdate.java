@@ -15,7 +15,8 @@ public class NewMessageUpdate extends Update {
             if(update.get("type").getAsString().equals("message_new")) {
                 JsonObject msg = update.get("object").getAsJsonObject().get("message").getAsJsonObject();
                 JsonObject client = update.get("object").getAsJsonObject().get("client_info").getAsJsonObject();
-                this.message = new Message(msg.get("date").getAsLong(), msg.get("from_id").getAsInt(), msg.get("id").getAsInt(), msg.get("out").getAsInt(), msg.get("conversation_message_id").getAsInt(), msg.get("important").getAsBoolean(), msg.get("is_hidden").getAsBoolean(), msg.get("peer_id").getAsInt(), msg.get("random_id").getAsInt(), msg.get("text").getAsString()).setPayload(msg.get("payload") == null?"":msg.get("payload").getAsString());
+                Action action = msg.get("action") == null?null:new Action(msg.get("action").getAsJsonObject().get("type").getAsString(), msg.get("action").getAsJsonObject().get("member_id").getAsInt());
+                this.message = new Message(msg.get("date").getAsLong(), msg.get("from_id").getAsInt(), msg.get("id").getAsInt(), msg.get("out").getAsInt(), msg.get("conversation_message_id").getAsInt(), msg.get("important").getAsBoolean(), msg.get("is_hidden").getAsBoolean(), msg.get("peer_id").getAsInt(), msg.get("random_id").getAsInt(), msg.get("text").getAsString(), action).setPayload(msg.get("payload") == null?"":msg.get("payload").getAsString());
                 this.client_info = new ClientInfo(client.get("button_actions").toString(), client.get("keyboard").getAsBoolean(), client.get("inline_keyboard").getAsBoolean(), client.get("carousel").getAsBoolean(), client.get("lang_id").getAsInt());
             } else {
                 throw new WrongTypeException("An update you have tried to convert had " + update.get("type").getAsString() + " type instead of message_new");
@@ -38,7 +39,8 @@ public class NewMessageUpdate extends Update {
             if(update.get("type").getAsString().equals("message_new")) {
                 JsonObject msg = update.get("object").getAsJsonObject().get("message").getAsJsonObject();
                 JsonObject client = update.get("object").getAsJsonObject().get("client_info").getAsJsonObject();
-                this.message = new Message(msg.get("date").getAsLong(), msg.get("from_id").getAsInt(), msg.get("id").getAsInt(), msg.get("out").getAsInt(), msg.get("conversation_message_id").getAsInt(), msg.get("important").getAsBoolean(), msg.get("is_hidden").getAsBoolean(), msg.get("peer_id").getAsInt(), msg.get("random_id").getAsInt(), msg.get("text").getAsString()).setPayload(msg.get("payload") == null?"":msg.get("payload").getAsString());;
+                Action action = msg.get("action") == null?null:new Action(msg.get("action").getAsJsonObject().get("type").getAsString(), msg.get("action").getAsJsonObject().get("member_id").getAsInt());
+                this.message = new Message(msg.get("date").getAsLong(), msg.get("from_id").getAsInt(), msg.get("id").getAsInt(), msg.get("out").getAsInt(), msg.get("conversation_message_id").getAsInt(), msg.get("important").getAsBoolean(), msg.get("is_hidden").getAsBoolean(), msg.get("peer_id").getAsInt(), msg.get("random_id").getAsInt(), msg.get("text").getAsString(), action).setPayload(msg.get("payload") == null?"":msg.get("payload").getAsString());;
                 this.client_info = new ClientInfo(client.get("button_actions").toString(), client.get("keyboard").getAsBoolean(), client.get("inline_keyboard").getAsBoolean(), client.get("carousel").getAsBoolean(), client.get("lang_id").getAsInt());
             } else {
                 throw new WrongTypeException("An update you have tried to convert had " + update.get("type").getAsString() + " type instead of message_new");
@@ -49,6 +51,35 @@ public class NewMessageUpdate extends Update {
     }
 
 
+    public static class Action {
+        String type;
+        Integer member_id;
+
+        public String getType() {
+            return type;
+        }
+
+        public Action setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Integer getMember_id() {
+            return member_id;
+        }
+
+        public Action setMember_id(Integer member_id) {
+            this.member_id = member_id;
+            return this;
+        }
+
+        public Action(String type, Integer member_id) {
+            this.type = type;
+            this.member_id = member_id;
+        }
+        public Action() {}
+
+    }
 
     public static class Message {
         public Long date;
@@ -62,6 +93,16 @@ public class NewMessageUpdate extends Update {
         public Integer random_id;
         public String payload;
         public String text;
+        public Action action;
+
+        public Action getAction() {
+            return action;
+        }
+
+        public Message setAction(Action action) {
+            this.action = action;
+            return this;
+        }
 
         public Integer getFrom_id() {
             return from_id;
@@ -156,7 +197,7 @@ public class NewMessageUpdate extends Update {
             return this;
         }
 
-        public Message(Long date, Integer from_id, Integer id, Integer out, Integer conversation_message_id, boolean important, boolean is_hidden, Integer peer_id, Integer random_id, String text) {
+        public Message(Long date, Integer from_id, Integer id, Integer out, Integer conversation_message_id, boolean important, boolean is_hidden, Integer peer_id, Integer random_id, String text, Action action) {
             this.date = date;
             this.from_id = from_id;
             this.id = id;
@@ -167,6 +208,7 @@ public class NewMessageUpdate extends Update {
             this.peer_id = peer_id;
             this.random_id = random_id;
             this.text = text;
+            this.action = action;
         }
 
         public Message() {}
