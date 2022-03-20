@@ -55,7 +55,7 @@ public abstract class ChatKeeper {
             vk.makeRequest(new MessagesSend(chat.getId(), "Результат проверок:" + banres));
         }
     }
-    public static void SilentRecalculateChats() throws IOException {
+    public static void silentRecalculateChats() throws IOException {
         for(Chat chat:chats) {
             String gotMembersBody = vk.makeRequest(new GetConversationMembers(chat.getId()));
             System.out.println(gotMembersBody);
@@ -100,7 +100,7 @@ public abstract class ChatKeeper {
     public static void updateChats() throws IOException {
         chats = dao.getAll("Chat");
         updateChatsInfo();
-        recalculateChats();
+        silentRecalculateChats();
         System.out.println("Imported chats. Total amount: " + chats.size());
     }
 
@@ -111,7 +111,7 @@ public abstract class ChatKeeper {
     private static void banSearch() {
         while (true) {
             try {
-                SilentRecalculateChats();
+                silentRecalculateChats();
             } catch (IOException e) {
                 System.out.println("Не смог перепроверить пользователей!");
                 e.printStackTrace();

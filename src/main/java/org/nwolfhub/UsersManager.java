@@ -171,7 +171,7 @@ public abstract class UsersManager {
                         String removeres = vk.makeRequest(new RemoveChatUser(peer_id - 2000000000, requested.getId()));
                         if (JsonParser.parseString(removeres).getAsJsonObject().get("response") != null) {
                             dao.update(requested.setBanned(true));
-                            ChatKeeper.SilentRecalculateChats();
+                            ChatKeeper.silentRecalculateChats();
                             vk.makeRequest(new MessagesSend(peer_id, "Пользователь забанен!"));
                         }
                     } else {
@@ -199,7 +199,7 @@ public abstract class UsersManager {
                     }
                     if ((cUser = (User) dao.get(User.class, from_id)) != null && cUser.getRank() >= 3 && (requested = (User) dao.get(User.class, id)).getRank() != null) {
                         dao.update(requested.setBanned(false));
-                        ChatKeeper.SilentRecalculateChats();
+                        ChatKeeper.silentRecalculateChats();
                         vk.makeRequest(new MessagesSend(peer_id, "Пользователь разбанен!"));
                     } else {
                         vk.makeRequest(new MessagesSend(peer_id, "Одно из условий не выполнено:\nОба пользователя зарегестрированы в системе\nВы имеете 3 ранг или больше"));
