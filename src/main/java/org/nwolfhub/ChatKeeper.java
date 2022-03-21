@@ -76,7 +76,6 @@ public abstract class ChatKeeper {
                     banres.append("\nНе найден в базе: ").append(id);
                 }
             }
-            System.out.println(banres.toString().replace("\n", " \\n"));
         }
     }
 
@@ -101,7 +100,6 @@ public abstract class ChatKeeper {
         chats = dao.getAll("Chat");
         updateChatsInfo();
         silentRecalculateChats();
-        System.out.println("Imported chats. Total amount: " + chats.size());
     }
 
     public static boolean fromRegistered(Integer peer_id) {
@@ -111,7 +109,7 @@ public abstract class ChatKeeper {
     private static void banSearch() {
         while (true) {
             try {
-                silentRecalculateChats();
+                updateChats();
             } catch (IOException e) {
                 System.out.println("Не смог перепроверить пользователей!");
                 e.printStackTrace();
