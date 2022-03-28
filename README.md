@@ -1,3 +1,4 @@
+This project is a copy of http://git.nwolfhub.ru/s0m31/legion-manager on github
 # Legion manager
 
 Бот на заказ для https://vk.com/alegions  
